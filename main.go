@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	ob "github.com/funkygao/golib/observer"
 	"github.com/gin-gonic/gin"
@@ -35,9 +36,22 @@ func main() {
 		eventCh1 := make(chan interface{})
 		ob.Subscribe(requestId, eventCh1)
 		func(c *gin.Context) {
-			data := <-eventCh1
-			dataS := fmt.Sprint(data)
-			c.String(http.StatusOK, dataS)
+			continueFor := true
+			for continueFor {
+				select {
+				case data := <-eventCh1:
+					dataS := fmt.Sprint(data)
+					c.String(http.StatusOK, dataS)
+					continueFor = false
+				default:
+					time.Sleep(1000 * time.Millisecond)
+					c.Writer.Flush()
+					fmt.Println("count: ", len(listRequests), "-> requestId: ", requestId, " -> +1 seg")
+					if indexOf(requestId, listRequests) < 0 {
+						continueFor = false
+					}
+				}
+			}
 		}(c)
 
 	})
