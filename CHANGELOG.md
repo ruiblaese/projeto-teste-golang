@@ -1,6 +1,6 @@
 # ChangeLog
 
-## v0.0.2
+## v0.1.0
 
 ### FEATURES
   * add index page for list pending requests
@@ -8,7 +8,7 @@
 ### ENHANCEMENTS  
   * add uuid for requisition control
 
-## v0.0.2
+## v0.0.1
 
 ### FEATURES
   * created project
