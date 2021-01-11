@@ -6,59 +6,69 @@ import (
 	"net/http"
 
 	ob "github.com/funkygao/golib/observer"
-	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 var listRequests = []string{}
 
 func main() {
 
-	router := gin.Default()
-	router.LoadHTMLGlob("templates/*")
+	// Echo instance
+	router := echo.New()
 
-	router.GET("/", func(c *gin.Context) {
+	// Middleware
+	router.Use(middleware.Logger())
+	router.Use(middleware.Recover())
 
-		c.HTML(http.StatusOK, "index.tmpl", gin.H{
-			"DataFields": listRequests,
-		})
+	//router.LoadHTMLGlob("templates/*")
 
-	})
+	router.GET("/", index)
 
-	router.GET("/request", func(c *gin.Context) {
+	router.GET("/request", request)
 
-		uuid := uuid.Must(uuid.NewV4())
-		requestId := fmt.Sprint(uuid)
-		log.Print("/request:", requestId)
-		listRequests = append(listRequests, requestId)
+	router.GET("/release-request", releaseRequest)
 
-		eventCh1 := make(chan interface{})
-		ob.Subscribe(requestId, eventCh1)
-		func(c *gin.Context) {
-			data := <-eventCh1
-			dataS := fmt.Sprint(data)
-			c.String(http.StatusOK, dataS)
-		}(c)
+	// Start server
+	router.Logger.Fatal(router.Start(":8080"))
 
-	})
+}
 
-	router.GET("/release-request", func(c *gin.Context) {
+func index(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello, World!")
+}
 
-		requestId := c.DefaultQuery("id", "1")
-		indice := indexOf(requestId, listRequests)
-		if indice >= 0 {
+func request(c echo.Context) error {
 
-			ob.Publish(requestId, requestId)
-			listRequests = append(listRequests[:indice], listRequests[indice+1:]...)
-			c.String(http.StatusOK, "OK")
+	uuid := uuid.Must(uuid.NewV4())
+	requestId := fmt.Sprint(uuid)
+	log.Print("/request:", requestId)
+	listRequests = append(listRequests, requestId)
 
-		} else {
-			c.String(http.StatusOK, "Error")
-		}
+	eventCh1 := make(chan interface{})
+	ob.Subscribe(requestId, eventCh1)
+	return func(c echo.Context) error {
+		data := <-eventCh1
+		dataS := fmt.Sprint(data)
+		return c.String(http.StatusOK, dataS)
+	}(c)
 
-	})
+}
 
-	router.Run(":8080")
+func releaseRequest(c echo.Context) error {
+
+	requestId := c.QueryParam("id")
+	indice := indexOf(requestId, listRequests)
+	if indice >= 0 {
+
+		ob.Publish(requestId, requestId)
+		listRequests = append(listRequests[:indice], listRequests[indice+1:]...)
+		return c.String(http.StatusOK, "OK")
+
+	} else {
+		return c.String(http.StatusOK, "Error")
+	}
 
 }
 
