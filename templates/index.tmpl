@@ -1,0 +1,13 @@
+<html>
+	<h1>Server Running</h1>
+
+    <h2>New request:</h2>
+    <a href="request">here</a><br>
+
+    <br>
+    <h2>List of pending requests: </h2>
+    {{range $element := .DataFields}}             
+        <a href="release-request?id={{$element}}">{{$element}}</a><br>
+    {{end}}
+	
+</html>
