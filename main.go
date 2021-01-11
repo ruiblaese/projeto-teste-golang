@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	ob "github.com/funkygao/golib/observer"
-	"github.com/gofrs/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -41,17 +42,29 @@ func index(c echo.Context) error {
 
 func request(c echo.Context) error {
 
-	uuid := uuid.Must(uuid.NewV4())
-	requestId := fmt.Sprint(uuid)
+	//uuid := uuid.Must(uuid.NewV4())
+	requestId := RandStringBytes(32)
 	log.Print("/request:", requestId)
 	listRequests = append(listRequests, requestId)
 
 	eventCh1 := make(chan interface{})
 	ob.Subscribe(requestId, eventCh1)
 	return func(c echo.Context) error {
-		data := <-eventCh1
-		dataS := fmt.Sprint(data)
-		return c.String(http.StatusOK, dataS)
+
+		for {
+			select {
+			case <-eventCh1:
+				fmt.Println("tick.")
+				data := <-eventCh1
+				dataS := fmt.Sprint(data)
+				return c.String(http.StatusOK, dataS)
+			default:
+				time.Sleep(1000 * time.Millisecond)
+				c.Response().Flush()
+				fmt.Println("count: ", len(listRequests), "-> requestId: ", requestId, " -> +1 seg")
+			}
+		}
+
 	}(c)
 
 }
@@ -79,4 +92,14 @@ func indexOf(element string, data []string) int {
 		}
 	}
 	return -1
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
