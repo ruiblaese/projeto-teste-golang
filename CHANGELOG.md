@@ -1,5 +1,10 @@
 # ChangeLog
 
+## v0.2.1
+
+### ENHANCEMENTS  
+  * add boostrap in html index
+
 ## v0.2.0
 
 ### FEATURES
