@@ -1,5 +1,10 @@
 # ChangeLog
 
+## v0.2.2
+
+### ENHANCEMENTS  
+  * docker release
+
 ## v0.2.1
 
 ### ENHANCEMENTS  
