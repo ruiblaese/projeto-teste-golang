@@ -1,4 +1,4 @@
-name: ci-golang-workflow
+name: build
 on: 
   push:
     branches: 
