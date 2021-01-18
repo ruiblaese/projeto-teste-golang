@@ -7,7 +7,6 @@
   <img alt="Project top programing language" src="https://img.shields.io/github/languages/top/ruiblaese/projeto-teste-golang">  
   <img alt="Repository size" src="https://img.shields.io/github/repo-size/ruiblaese/projeto-teste-golang">   
 </p>
-
 <p align="center">
     <a href="#descricao">Descrição</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;    
     <a href="#contato">Contato</a>
