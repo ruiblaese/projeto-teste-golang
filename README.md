@@ -6,6 +6,7 @@
   <img alt="Made with Golang" src="https://img.shields.io/badge/Made%20with-Golang-%1f425f">  
   <img alt="Project top programing language" src="https://img.shields.io/github/languages/top/ruiblaese/projeto-teste-golang">  
   <img alt="Repository size" src="https://img.shields.io/github/repo-size/ruiblaese/projeto-teste-golang">   
+  <img alt="Build" src="https://github.com/ruiblaese/projeto-teste-golang/workflows/build/badge.svg">          
 </p>
 <p align="center">
     <a href="#descricao">Descrição</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;    
