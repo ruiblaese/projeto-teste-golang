@@ -13,7 +13,6 @@ import (
 
 var listRequests = []string{}
 
-//teste commit in develop
 func main() {
 
 	router := gin.Default()
