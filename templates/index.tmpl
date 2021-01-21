@@ -34,7 +34,7 @@
         <div>
             <div class="col">
                 <nav class="nav">
-                    <a class="nav-link" href="request">Nova Requisição</a>
+                    <a class="nav-link" href="request" target="_blank">Nova Requisição</a>
                     <a class="nav-link">Listagem requisições pendentes</a>                    
                 </nav>
             </div>
@@ -52,7 +52,7 @@
             <div class="card-body">
                 {{range $element := .DataFields}}
                 <div class="row">                                              
-                    <a href="release-request?id={{$element}}">{{$element}}</a>                    
+                    <a href="release-request?id={{$element}}" target="_blank">{{$element}}</a>                    
                 </div>
                 {{end}}
             </div>
