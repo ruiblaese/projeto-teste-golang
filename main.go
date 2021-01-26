@@ -1,19 +1,27 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	ob "github.com/funkygao/golib/observer"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
 )
 
-var listRequests = []string{}
+var (
+	listRequests = []string{}
+	ctx          = context.Background()
+)
 
 func main() {
+
+	testRedis()
 
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
@@ -29,12 +37,12 @@ func main() {
 	router.GET("/request", func(c *gin.Context) {
 
 		uuid := uuid.Must(uuid.NewV4())
-		requestId := fmt.Sprint(uuid)
-		log.Print("/request:", requestId)
-		listRequests = append(listRequests, requestId)
+		requestID := fmt.Sprint(uuid)
+		log.Print("/request:", requestID)
+		listRequests = append(listRequests, requestID)
 
 		eventCh1 := make(chan interface{})
-		ob.Subscribe(requestId, eventCh1)
+		ob.Subscribe(requestID, eventCh1)
 		func(c *gin.Context) {
 			continueFor := true
 			for continueFor {
@@ -46,8 +54,8 @@ func main() {
 				default:
 					time.Sleep(1000 * time.Millisecond)
 					c.Writer.Flush()
-					fmt.Println("count: ", len(listRequests), "-> requestId: ", requestId, " -> +1 seg")
-					if indexOf(requestId, listRequests) < 0 {
+					fmt.Println("count: ", len(listRequests), "-> requestId: ", requestID, " -> +1 seg")
+					if indexOf(requestID, listRequests) < 0 {
 						continueFor = false
 					}
 				}
@@ -58,11 +66,11 @@ func main() {
 
 	router.GET("/release-request", func(c *gin.Context) {
 
-		requestId := c.DefaultQuery("id", "1")
-		indice := indexOf(requestId, listRequests)
+		requestID := c.DefaultQuery("id", "1")
+		indice := indexOf(requestID, listRequests)
 		if indice >= 0 {
 
-			ob.Publish(requestId, requestId)
+			ob.Publish(requestID, requestID)
 			listRequests = append(listRequests[:indice], listRequests[indice+1:]...)
 			c.String(http.StatusOK, "OK")
 
@@ -83,4 +91,34 @@ func indexOf(element string, data []string) int {
 		}
 	}
 	return -1
+}
+
+func testRedis() {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	err := rdb.Set(ctx, "key", "value", 0).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := rdb.Get(ctx, "key").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("key", val)
+
+	val2, err := rdb.Get(ctx, "key2").Result()
+	if err == redis.Nil {
+		fmt.Println("key2 does not exist")
+	} else if err != nil {
+		panic(err)
+	} else {
+		fmt.Println("key2", val2)
+	}
+
+	os.Exit(0)
 }
