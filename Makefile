@@ -7,3 +7,6 @@ run:
 push:	
 	docker tag ruiblaese/projeto-golang:latest ruiblaese/projeto-golang:0.2.3	
 	docker push ruiblaese/projeto-golang:0.2.3	
+
+redis: 
+	docker run --name redis-test-instance -p 6379:6379 -d redis
