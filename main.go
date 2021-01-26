@@ -105,6 +105,11 @@ func testRedis() {
 		panic(err)
 	}
 
+	err = rdb.Set(ctx, "key2", "value2", 0).Err()
+	if err != nil {
+		panic(err)
+	}
+
 	val, err := rdb.Get(ctx, "key").Result()
 	if err != nil {
 		panic(err)
@@ -118,6 +123,12 @@ func testRedis() {
 		panic(err)
 	} else {
 		fmt.Println("key2", val2)
+	}
+
+	keys := rdb.Keys(ctx, "*")
+	s, _ := keys.Result()
+	for k, v := range s {
+		fmt.Printf("%v -> %s\n", k, v)
 	}
 
 	os.Exit(0)
