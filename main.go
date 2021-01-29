@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	ob "github.com/funkygao/golib/observer"
@@ -14,14 +13,15 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-var (
-	listRequests = []string{}
-	ctx          = context.Background()
-)
+var ctx = context.Background()
 
 func main() {
 
-	testRedis()
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
 
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
@@ -29,7 +29,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 
 		c.HTML(http.StatusOK, "index.tmpl", gin.H{
-			"DataFields": listRequests,
+			"DataFields": getAll(rdb),
 		})
 
 	})
@@ -39,7 +39,7 @@ func main() {
 		uuid := uuid.Must(uuid.NewV4())
 		requestID := fmt.Sprint(uuid)
 		log.Print("/request:", requestID)
-		listRequests = append(listRequests, requestID)
+		addRequest(rdb, requestID)
 
 		eventCh1 := make(chan interface{})
 		ob.Subscribe(requestID, eventCh1)
@@ -54,8 +54,8 @@ func main() {
 				default:
 					time.Sleep(1000 * time.Millisecond)
 					c.Writer.Flush()
-					fmt.Println("count: ", len(listRequests), "-> requestId: ", requestID, " -> +1 seg")
-					if indexOf(requestID, listRequests) < 0 {
+					fmt.Println("count: ", len(getAll(rdb)), "-> requestId: ", requestID, " -> +1 seg")
+					if !getRequest(rdb, requestID) {
 						continueFor = false
 					}
 				}
@@ -67,11 +67,10 @@ func main() {
 	router.GET("/release-request", func(c *gin.Context) {
 
 		requestID := c.DefaultQuery("id", "1")
-		indice := indexOf(requestID, listRequests)
-		if indice >= 0 {
+		if getRequest(rdb, requestID) {
 
 			ob.Publish(requestID, requestID)
-			listRequests = append(listRequests[:indice], listRequests[indice+1:]...)
+			deleteRequest(rdb, requestID)
 			c.String(http.StatusOK, "OK")
 
 		} else {
@@ -84,37 +83,12 @@ func main() {
 
 }
 
-func indexOf(element string, data []string) int {
-	for k, v := range data {
-		if element == v {
-			return k
-		}
-	}
-	return -1
-}
+func addRequest(rdb *redis.Client, requestID string) {
 
-func testRedis() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
-	err := rdb.Set(ctx, "key", "value", 0).Err()
+	err := rdb.Set(ctx, requestID, "value", 0).Err()
 	if err != nil {
 		panic(err)
 	}
-
-	err = rdb.Set(ctx, "key2", "value2", 0).Err()
-	if err != nil {
-		panic(err)
-	}
-
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
 
 	val2, err := rdb.Get(ctx, "key2").Result()
 	if err == redis.Nil {
@@ -125,11 +99,26 @@ func testRedis() {
 		fmt.Println("key2", val2)
 	}
 
+}
+
+func getRequest(rdb *redis.Client, requestID string) bool {
+	_, err := rdb.Get(ctx, requestID).Result()
+	if err == redis.Nil {
+		return false
+	} else if err != nil {
+		panic(err)
+	} else {
+		return true
+	}
+}
+
+func getAll(rdb *redis.Client) []string {
 	keys := rdb.Keys(ctx, "*")
 	s, _ := keys.Result()
-	for k, v := range s {
-		fmt.Printf("%v -> %s\n", k, v)
-	}
+	return s
+}
 
-	os.Exit(0)
+func deleteRequest(rdb *redis.Client, requestID string) {
+	rdb.Del(ctx, requestID)
+
 }
