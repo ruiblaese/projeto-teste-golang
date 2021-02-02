@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	ob "github.com/funkygao/golib/observer"
@@ -18,7 +19,7 @@ var ctx = context.Background()
 func main() {
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     os.Getenv("REDIS"),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
