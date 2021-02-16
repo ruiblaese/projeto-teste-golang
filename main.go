@@ -30,7 +30,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 
 		c.HTML(http.StatusOK, "index.tmpl", gin.H{
-			"DataFields": getAll(rdb),
+			"DataFields": getAllRequests(rdb),
 		})
 
 	})
@@ -55,7 +55,7 @@ func main() {
 				default:
 					time.Sleep(1000 * time.Millisecond)
 					c.Writer.Flush()
-					fmt.Println("count: ", len(getAll(rdb)), "-> requestId: ", requestID, " -> +1 seg")
+					fmt.Println("count: ", len(getAllRequests(rdb)), "-> requestId: ", requestID, " -> +1 seg")
 					if !getRequest(rdb, requestID) {
 						continueFor = false
 					}
@@ -68,9 +68,10 @@ func main() {
 	router.GET("/release-request", func(c *gin.Context) {
 
 		requestID := c.DefaultQuery("id", "1")
+		data := c.DefaultQuery("data", "")
 		if getRequest(rdb, requestID) {
 
-			ob.Publish(requestID, requestID)
+			ob.Publish(requestID, data)
 			deleteRequest(rdb, requestID)
 			c.String(http.StatusOK, "OK")
 
@@ -113,7 +114,7 @@ func getRequest(rdb *redis.Client, requestID string) bool {
 	}
 }
 
-func getAll(rdb *redis.Client) []string {
+func getAllRequests(rdb *redis.Client) []string {
 	keys := rdb.Keys(ctx, "*")
 	s, _ := keys.Result()
 	return s
