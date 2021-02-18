@@ -16,6 +16,27 @@
             font-size: 2.5rem;
         }
     </style>
+    <script>
+        function openPageReleaseRequest(requestId) {
+            window.open("release-request?id=" + requestId 
+            + "&data=" + document.getElementById("dados").value
+            , "_blank");
+            
+            setTimeout(function () {
+                document.location.reload(true);
+            }, 500);
+
+        };
+
+        function openPageNewRequest() {
+            window.open("request", "_blank");
+
+            setTimeout(function () {
+                document.location.reload(true);
+            }, 500);
+
+        };        
+    </script>
 </head>
 
 <body>
@@ -34,8 +55,8 @@
         <div>
             <div class="col">
                 <nav class="nav">
-                    <a class="nav-link" href="request">Nova Requisição</a>
-                    <a class="nav-link">Listagem requisições pendentes</a>                    
+                    <a class="nav-link" href="javascript:openPageNewRequest()">Nova Requisição</a>
+                    <a class="nav-link">Listagem requisições pendentes</a>
                 </nav>
             </div>
         </div>
@@ -47,16 +68,25 @@
             <h1 class="display-4">Listagem de requisições</h1>
         </div>
 
+
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Dados para requisição</span>
+            </div>
+            <textarea id="dados" class="form-control" aria-label="Dados para requisição"></textarea>
+        </div>
+        <br>
+
         <div class="card mb-3">
             <div class="card-header alert-dark">Lista de requisições pendentes</div>
             <div class="card-body">
                 {{range $element := .DataFields}}
-                <div class="row">                                              
-                    <a href="release-request?id={{$element}}">{{$element}}</a>                    
+                <div class="row">                    
+                    <a href="javascript:openPageReleaseRequest('{{$element}}')">{{$element}}</a>;
                 </div>
                 {{end}}
             </div>
-        </div>        
+        </div>
 
     </div>
 </body>
